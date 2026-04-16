@@ -321,10 +321,22 @@ check_messages → 收到插件消息 → 【Cursor 完整回复】→ check_mes
             webviewView.webview.options = {
                 enableScripts: true,
                 localResourceRoots: [context.extensionUri],
+                // 减少侧栏隐藏/切换时 Webview 被销毁，降低宿主注册 Service Worker 竞态概率（InvalidStateError）
+                retainContextWhenHidden: true,
             };
             const nonce = getNonce();
             const extVer = String(context.extension.packageJSON.version ?? "");
-            webviewView.webview.html = getHtml(webviewView.webview, nonce, extVer);
+            const html = getHtml(webviewView.webview, nonce, extVer);
+            // 微延迟：让 Webview 文档进入稳定状态后再注入 HTML，缓解 Cursor/VS Code 已知问题
+            // https://github.com/microsoft/vscode/issues/125993 https://github.com/microsoft/vscode/issues/190719
+            setTimeout(() => {
+                try {
+                    webviewView.webview.html = html;
+                }
+                catch (e) {
+                    console.error(`[${viewType}] set webview html failed`, e);
+                }
+            }, 32);
             const queueDirFixed = path.join(os.homedir(), ".cursor", "my-mcp-messages");
             const lastReplyBySession = {};
             for (let n = 1; n <= MAX_MCP_SESSIONS; n++) {

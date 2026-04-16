@@ -39,6 +39,7 @@
 
 ### 5. 常见问题
 
+- **侧栏提示「加载 Web 视图时出错」且含 `ServiceWorker` / `InvalidStateError`**：这是 **Cursor / VS Code 宿主**在 Webview 里注册 Service Worker 时的已知竞态（与扩展业务代码无关），官方 issue 如 [vscode#125993](https://github.com/microsoft/vscode/issues/125993)、[vscode#190719](https://github.com/microsoft/vscode/issues/190719)。**先试**：命令面板执行 **Developer: Reload Window**；仍出现则完全退出 Cursor 再开，或升级 Cursor 版本。本扩展从 **v1.5.2** 起已开启 `retainContextWhenHidden` 并略微延迟注入 HTML，以降低触发概率。
 - **Cursor 没反应**：确认已配置 MCP、对话里已提到正确的 `my-mcp-N`，并尝试让助手再次调用 `check_messages`。
 - **多窗口 / 多项目**：不同 Cursor 窗口可各绑一路 `my-mcp-N`，互不串台；每路队列目录见仓库内 `extension/docs/project-overview.md`。
 - **空队列等待时间**：MCP 进程环境变量 `CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS` 控制 `check_messages` 在无消息时最长等待（默认 20000 ms），避免无限阻塞。
