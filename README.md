@@ -1,5 +1,45 @@
 # Cursor MCP Bridge
 
+A **Cursor / VS Code** extension (package id **`cursor-mcp-bridge`**) that manages multiple **Model Context Protocol (MCP)** sessions from the sidebar. It exchanges messages with Cursor chats via tools such as `check_messages` (text, screenshots, attachments).
+
+## Features
+
+- **Multi-session** (up to 32 channels by default), mapped to `my-mcp-1` … `my-mcp-N` in Cursor config
+- **One-click workspace setup** writes `.cursor/mcp.json` and rule files
+- Optional memos per channel; rich messages (images and files)
+
+More detail: [`extension/readme.md`](extension/readme.md). Architecture and paths: [`extension/docs/project-overview.md`](extension/docs/project-overview.md).
+
+## Development & packaging
+
+```bash
+cd extension
+npm install
+npm run compile   # if TypeScript sources are present
+npm run package   # builds .vsix (requires vsce)
+```
+
+Main entry: `extension/dist/extension.js`. MCP server logic: `extension/mcp-server/index.mjs`.
+
+## Environment variables (MCP process)
+
+| Variable | Description |
+|----------|-------------|
+| `CURSOR_MCP_BRIDGE_SESSION` | Session id string (e.g. `1`), required for multi-session; legacy `SIDECAR_MCP_SESSION`, `WUKONG_SESSION` still read |
+| `CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS` | Max wait in ms when `check_messages` has an empty queue (default `20000`); legacy `SIDECAR_MCP_CHECK_MAX_WAIT_MS`, `WUKONG_CHECK_MAX_WAIT_MS` still read |
+
+## License
+
+MIT — see [`extension/LICENSE.txt`](extension/LICENSE.txt).
+
+### Local folder name
+
+You can name the cloned repo folder **`cursor-mcp-bridge`** on disk (purely cosmetic). If rename fails with “file in use”, close this workspace in the editor (or exit the app), rename the folder in Explorer, then reopen it.
+
+---
+
+# Cursor MCP Bridge（中文说明）
+
 用于 **Cursor / VS Code** 的扩展（包名 **`cursor-mcp-bridge`**）：在侧栏管理多路 **Model Context Protocol（MCP）** 会话，让插件侧与 Cursor 对话通过 `check_messages` 等工具交换消息（文字、截图、附件）。
 
 ## 功能概要
@@ -31,3 +71,7 @@ npm run package   # 生成 .vsix（需已安装 vsce）
 ## 许可证
 
 MIT — 见 [`extension/LICENSE.txt`](extension/LICENSE.txt)。
+
+## 本地文件夹名称
+
+建议将仓库所在目录命名为 **`cursor-mcp-bridge`**（与扩展包名一致，仅便于识别）。若提示「文件正在使用」无法重命名，请先在 Cursor / VS Code 中 **关闭该文件夹工作区** 或退出程序，再在资源管理器中重命名，然后重新打开。
