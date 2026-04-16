@@ -26,7 +26,6 @@ Main entry: `extension/dist/extension.js`. MCP server logic: `extension/mcp-serv
 | Variable | Description |
 |----------|-------------|
 | `CURSOR_MCP_BRIDGE_SESSION` | Session id string (e.g. `1`), required for multi-session; legacy `SIDECAR_MCP_SESSION`, `WUKONG_SESSION` still read |
-| `CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS` | Max wait in ms when `check_messages` has an empty queue (default `20000`); legacy `SIDECAR_MCP_CHECK_MAX_WAIT_MS`, `WUKONG_CHECK_MAX_WAIT_MS` still read |
 
 ## License
 
@@ -66,7 +65,6 @@ npm run package   # 生成 .vsix（需已安装 vsce）
 | 变量 | 说明 |
 |------|------|
 | `CURSOR_MCP_BRIDGE_SESSION` | 会话编号字符串（如 `1`），多路时必填；旧名 `SIDECAR_MCP_SESSION`、`WUKONG_SESSION` 仍兼容 |
-| `CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS` | `check_messages` 空队列时最长等待毫秒数，默认 20000；旧名 `SIDECAR_MCP_CHECK_MAX_WAIT_MS`、`WUKONG_CHECK_MAX_WAIT_MS` 仍兼容 |
 
 ## 许可证
 

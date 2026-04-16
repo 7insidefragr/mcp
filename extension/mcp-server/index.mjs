@@ -2,6 +2,9 @@
 /**
  * 最小 MCP Server：check_messages 读取扩展发送的消息，send_message 接收文本/图片
  * 运行：node index.mjs
+ *
+ * 队列策略与 wukong-mcp 1.4.0 一致：空队列时 long-poll（仅按间隔睡眠），直到有新消息或调用被取消；
+ * 不设「超时返回」，以便 Cursor 侧持续阻塞在同一次 check_messages 上监听插件。
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -66,36 +69,88 @@ function buildSystemSuffix() {
     "【必须先做】像平常聊天一样直接回应用户内容（寒暄、问答、任务等），不要用「工具已验证」「MCP 正常」等**代替真实回复**。\n" +
     "【禁止】用长篇解释插件/Cursor/通道原理来结束本轮；用户发「你好」就正常回「你好」类简短问候即可。\n\n" +
     "正文写在 Cursor 窗口；默认不要把长文塞进 reply。\n\n" +
-    "与插件持续对话时：处理完本条后可再调 check_messages（reply 可省略）看是否还有下一条。" +
-    "若本次返回**仅一行**标记 `[cursor-mcp-bridge:queue-empty]`，表示队列为空：**禁止**把该标记或「暂无消息」类说明复述给用户，**禁止**在同一轮里连环调用 check_messages；" +
-    "请继续正常处理 Cursor 里用户的对话；待插件侧可能又有新消息、或用户明确要求拉取时再调。单次空队列等待最长约 " +
-    Math.round(getCheckMaxWaitMs() / 1000) +
-    " 秒。\n" +
+    "回复用户后**必须立刻**再调用 check_messages()（reply 可省略）等待下一条，否则用户会感觉「对话中断」。\n" +
     "[END]";
 
   return suffix;
 }
 
-// 空队列时两次读取 messages.json 的间隔；略大一点可减少磁盘轮询频率
-const POLL_INTERVAL_MS = 2000;
-
-// 避免单次工具调用永不返回导致 Cursor/Agent 卡在「等 MCP」；可用环境变量调节
-const DEFAULT_CHECK_MAX_WAIT_MS = 20_000;
-const MIN_CHECK_MAX_WAIT_MS = 3_000;
-const MAX_CHECK_MAX_WAIT_MS = 120_000;
-
-function getCheckMaxWaitMs() {
-  const raw = (
-    process.env.CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS ||
-    process.env.SIDECAR_MCP_CHECK_MAX_WAIT_MS ||
-    process.env.WUKONG_CHECK_MAX_WAIT_MS ||
-    ""
-  ).trim();
-  if (!raw) return DEFAULT_CHECK_MAX_WAIT_MS;
-  const n = Number(raw);
-  if (!Number.isFinite(n)) return DEFAULT_CHECK_MAX_WAIT_MS;
-  return Math.min(MAX_CHECK_MAX_WAIT_MS, Math.max(MIN_CHECK_MAX_WAIT_MS, Math.round(n)));
+/** 从队列头部取出一条（有则写回剩余并返回该条，无则 null） */
+function shiftQueuedMessage() {
+  const data = readQueue();
+  const queued = Array.isArray(data.messages) ? data.messages : [];
+  if (queued.length === 0) return null;
+  const first = queued[0];
+  writeQueue({ messages: queued.slice(1) });
+  return first;
 }
+
+/** 将单条插件消息转为 MCP 工具返回的 content 数组 */
+function contentFromQueuedPluginMessage(m) {
+  const textPieces = [];
+  const imageParts = [];
+  if (typeof m.text === "string" && m.text.trim()) {
+    textPieces.push(m.text.trim());
+  }
+  if (Array.isArray(m.images)) {
+    for (const img of m.images) {
+      if (img?.mimeType && img?.data) {
+        imageParts.push({ mimeType: String(img.mimeType), data: String(img.data) });
+      }
+    }
+  }
+  if (Array.isArray(m.files)) {
+    for (const f of m.files) {
+      if (!f?.name || !f?.mimeType || !f?.data) continue;
+      const name = String(f.name);
+      const mt = String(f.mimeType);
+      const b64 = String(f.data).replace(/\s/g, "");
+      if (mt.startsWith("image/")) {
+        imageParts.push({ mimeType: mt, data: b64 });
+        continue;
+      }
+      const textLike =
+        mt.startsWith("text/") ||
+        mt === "application/json" ||
+        mt === "application/javascript" ||
+        mt.endsWith("+json") ||
+        mt.endsWith("+xml");
+      if (textLike) {
+        try {
+          const body = Buffer.from(b64, "base64").toString("utf8");
+          textPieces.push(`【附件: ${name}】\n${body}`);
+        } catch {
+          textPieces.push(`【附件: ${name}】（文本解码失败）`);
+        }
+      } else {
+        textPieces.push(`【二进制附件: ${name} (${mt})，Base64 如下】\n${b64}`);
+      }
+    }
+  }
+  const content = [];
+  const systemSuffix = buildSystemSuffix();
+  const mainText = textPieces.join("\n\n");
+  if (mainText) {
+    content.push({ type: "text", text: mainText + systemSuffix });
+  } else if (imageParts.length > 0) {
+    content.push({
+      type: "text",
+      text: "（收到来自插件的图片/附件，无文字说明）" + systemSuffix,
+    });
+  } else {
+    content.push({
+      type: "text",
+      text: "（收到来自插件的消息）" + systemSuffix,
+    });
+  }
+  for (const img of imageParts) {
+    content.push({ type: "image", mimeType: img.mimeType, data: img.data });
+  }
+  return content;
+}
+
+// 与 wukong-mcp 1.4.0 一致：空队列时按此间隔睡眠后继续读盘
+const POLL_INTERVAL_MS = 1000;
 
 function sleepWithAbort(signal, ms) {
   return new Promise((resolve) => {
@@ -115,7 +170,7 @@ function sleepWithAbort(signal, ms) {
 }
 
 const serverName = sessionKey ? `my-mcp-${sessionKey}` : "my-mcp";
-const server = new McpServer({ name: serverName, version: "1.5.4" });
+const server = new McpServer({ name: serverName, version: "1.5.6" });
 
 // Cursor 调用此工具获取你在扩展里发送的消息
 server.registerTool(
@@ -124,11 +179,8 @@ server.registerTool(
     title: "检查消息（持续对话）",
     description:
       "【持续对话】获取用户通过插件发送的消息。助手正文应只在 Cursor 对话里输出。" +
-      "若队列暂无消息，会在约 " +
-      Math.round(getCheckMaxWaitMs() / 1000) +
-      " 秒内返回一行标记 `[cursor-mcp-bridge:queue-empty]`（可用环境变量 CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS 调节；旧名 SIDECAR_* / WUKONG_* 仍兼容）。" +
-      "出现该标记时：不要复述给用户，不要同一回合内连续多次调用本工具。" +
-      "默认不传 reply（不向插件镜像助手回复）。",
+      "队列空时会一直阻塞轮询直至出现新消息（与侧栏发消息节奏一致），以便持续对话；" +
+      "处理完后必须再次调用本工具以保持循环；默认不传 reply（不向插件镜像助手回复）。",
     inputSchema: z.object({
       reply: z
         .string()
@@ -151,105 +203,13 @@ server.registerTool(
       }
     }
 
-    const deadline = Date.now() + getCheckMaxWaitMs();
-
-    // 带超时的轮询：有消息立刻返回；无消息最多等到 deadline，避免 Agent 永久卡在工具调用上
+    // long-poll：一直等待，直到队列里出现新消息（对齐 wukong-mcp 1.4.0）
     while (!extra.signal.aborted) {
-      const data = readQueue();
-      const queued = Array.isArray(data.messages) ? data.messages : [];
-
-      if (queued.length > 0) {
-        // 每次只取一条，避免多条「你好」合并后模型只讲机制、不聊天
-        const first = queued[0];
-        const rest = queued.slice(1);
-        writeQueue({ messages: rest });
-
-        const textPieces = [];
-        const imageParts = [];
-
-        const m = first;
-        if (typeof m.text === "string" && m.text.trim()) {
-          textPieces.push(m.text.trim());
-        }
-        if (Array.isArray(m.images)) {
-          for (const img of m.images) {
-            if (img?.mimeType && img?.data) {
-              imageParts.push({ mimeType: String(img.mimeType), data: String(img.data) });
-            }
-          }
-        }
-        if (Array.isArray(m.files)) {
-          for (const f of m.files) {
-            if (!f?.name || !f?.mimeType || !f?.data) continue;
-            const name = String(f.name);
-            const mt = String(f.mimeType);
-            const b64 = String(f.data).replace(/\s/g, "");
-            if (mt.startsWith("image/")) {
-              imageParts.push({ mimeType: mt, data: b64 });
-              continue;
-            }
-            const textLike =
-              mt.startsWith("text/") ||
-              mt === "application/json" ||
-              mt === "application/javascript" ||
-              mt.endsWith("+json") ||
-              mt.endsWith("+xml");
-            if (textLike) {
-              try {
-                const body = Buffer.from(b64, "base64").toString("utf8");
-                textPieces.push(`【附件: ${name}】\n${body}`);
-              } catch {
-                textPieces.push(`【附件: ${name}】（文本解码失败）`);
-              }
-            } else {
-              textPieces.push(
-                `【二进制附件: ${name} (${mt})，Base64 如下】\n${b64}`
-              );
-            }
-          }
-        }
-
-        const content = [];
-        const systemSuffix = buildSystemSuffix();
-        const mainText = textPieces.join("\n\n");
-        if (mainText) {
-          content.push({
-            type: "text",
-            text: mainText + systemSuffix,
-          });
-        } else if (imageParts.length > 0) {
-          content.push({
-            type: "text",
-            text: "（收到来自插件的图片/附件，无文字说明）" + systemSuffix,
-          });
-        } else {
-          content.push({
-            type: "text",
-            text: "（收到来自插件的消息）" + systemSuffix,
-          });
-        }
-
-        for (const img of imageParts) {
-          content.push({
-            type: "image",
-            mimeType: img.mimeType,
-            data: img.data,
-          });
-        }
-
-        return { content };
+      const m = shiftQueuedMessage();
+      if (m) {
+        return { content: contentFromQueuedPluginMessage(m) };
       }
-
-      if (Date.now() >= deadline) {
-        // 极简标记：避免模型把长段「暂无消息」复述给用户；含义见工具 description 与工作区规则
-        return {
-          content: [{ type: "text", text: "[cursor-mcp-bridge:queue-empty]" }],
-        };
-      }
-
-      const remaining = deadline - Date.now();
-      const sleepMs = Math.min(POLL_INTERVAL_MS, Math.max(1, remaining));
-      await sleepWithAbort(extra.signal, sleepMs);
+      await sleepWithAbort(extra.signal, POLL_INTERVAL_MS);
     }
 
     return {

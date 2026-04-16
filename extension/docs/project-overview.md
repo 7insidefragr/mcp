@@ -12,9 +12,9 @@
 - 消息队列根目录：`~/.cursor/my-mcp-messages`（多会话时在 `s/<会话号>/` 下）。
 - 多会话由环境变量 **`CURSOR_MCP_BRIDGE_SESSION`** 标识通道；旧名 **`SIDECAR_MCP_SESSION`**、**`WUKONG_SESSION`** 仍被服务端识别，便于迁移。
 
-## `check_messages` 与超时
+## `check_messages` 与 long-poll
 
-空队列时工具会轮询等待，但设有**最长等待时间**（默认约 20 秒），避免 Cursor Agent 长时间卡在单次工具调用上。可通过 **`CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS`** 调节；旧名 **`SIDECAR_MCP_CHECK_MAX_WAIT_MS`**、**`WUKONG_CHECK_MAX_WAIT_MS`** 仍兼容。
+与 **wukong-mcp 1.4.0** 一致：队列为空时，工具在**单次调用内**按约 **1 秒**间隔读盘睡眠并循环，直到队列出现新消息或调用被取消；**不设超时返回**，以便 Cursor 在同一次 `check_messages` 上持续阻塞监听插件。
 
 ## 许可证
 
