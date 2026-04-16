@@ -40,7 +40,7 @@
         {
           "id": "cursor-mcp-bridge",
           "title": "MCP Bridge",
-          "icon": "resources/icon.svg"
+          "icon": "resources/icon-128.png"
         }
       ]
     },
