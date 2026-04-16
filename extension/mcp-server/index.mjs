@@ -113,7 +113,7 @@ function sleepWithAbort(signal, ms) {
 }
 
 const serverName = sessionKey ? `my-mcp-${sessionKey}` : "my-mcp";
-const server = new McpServer({ name: serverName, version: "1.5.0" });
+const server = new McpServer({ name: serverName, version: "1.5.1" });
 
 // Cursor 调用此工具获取你在扩展里发送的消息
 server.registerTool(

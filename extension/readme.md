@@ -19,7 +19,7 @@
 
 ### 2. 打开侧栏并配置工作区
 
-1. 点击活动栏 **MCP Bridge**（活动栏与扩展列表均使用 `resources/icon-128.png`；旧版猴头 SVG 仍保留在 `resources/icon.svg` 供自行替换引用）。
+1. 点击活动栏 **MCP Bridge**（活动栏图标为 `resources/icon.svg`；扩展市场/已安装列表中的「头像」为 `package.json` 的 `icon`：`resources/icon-128.png`）。
 2. 在侧栏顶部选择要绑定的**工作区文件夹**（需已用 Cursor 打开该文件夹）。
 3. 按需 **添加会话 / 删除会话**（每路对应 Cursor 里的一个 MCP 名称，如 `my-mcp-1`）。
 4. 点击 **开始配置**：会向该工作区写入 `.cursor/mcp.json`（多路 `my-mcp-N`）以及 `.cursor/rules/` 下的规则文件，引导模型使用 `check_messages`。
