@@ -74,7 +74,8 @@ function buildSystemSuffix() {
   return suffix;
 }
 
-const POLL_INTERVAL_MS = 1000;
+// 空队列时两次读取 messages.json 的间隔；略大一点可减少磁盘轮询频率
+const POLL_INTERVAL_MS = 2000;
 
 // 避免单次工具调用永不返回导致 Cursor/Agent 卡在「等 MCP」；可用环境变量调节
 const DEFAULT_CHECK_MAX_WAIT_MS = 20_000;
@@ -112,7 +113,7 @@ function sleepWithAbort(signal, ms) {
 }
 
 const serverName = sessionKey ? `my-mcp-${sessionKey}` : "my-mcp";
-const server = new McpServer({ name: serverName, version: "0.1.0" });
+const server = new McpServer({ name: serverName, version: "1.5.0" });
 
 // Cursor 调用此工具获取你在扩展里发送的消息
 server.registerTool(

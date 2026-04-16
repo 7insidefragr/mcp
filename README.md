@@ -8,7 +8,7 @@ A **Cursor / VS Code** extension (package id **`cursor-mcp-bridge`**) that manag
 - **One-click workspace setup** writes `.cursor/mcp.json` and rule files
 - Optional memos per channel; rich messages (images and files)
 
-More detail: [`extension/readme.md`](extension/readme.md). Architecture and paths: [`extension/docs/project-overview.md`](extension/docs/project-overview.md).
+More detail: [`extension/readme.md`](extension/readme.md) (includes step-by-step **user guide**). Architecture and paths: [`extension/docs/project-overview.md`](extension/docs/project-overview.md).
 
 ## Development & packaging
 
@@ -48,7 +48,7 @@ You can name the cloned repo folder **`cursor-mcp-bridge`** on disk (purely cosm
 - 一键写入工作区 `.cursor/mcp.json` 与规则文件
 - 可选备忘、富消息（图片与文件）
 
-详细说明见 [`extension/readme.md`](extension/readme.md)；实现与路径说明见 [`extension/docs/project-overview.md`](extension/docs/project-overview.md)。
+**使用说明（安装、配置工作区、绑定 `my-mcp-N`、发消息、常见问题）** 见 [`extension/readme.md`](extension/readme.md) 中的「使用说明（必读）」一节。实现与路径说明见 [`extension/docs/project-overview.md`](extension/docs/project-overview.md)。
 
 ## 开发与打包
 
