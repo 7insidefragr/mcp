@@ -1,0 +1,3 @@
+# Local VSIX build artifacts
+*.vsix
+extension/*.vsix
