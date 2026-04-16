@@ -1,6 +1,6 @@
-# 侧栏 MCP（Sidecar MCP）
+# Cursor MCP Bridge
 
-用于 **Cursor / VS Code** 的扩展：在侧栏管理多路 **Model Context Protocol（MCP）** 会话，让插件侧与 Cursor 对话通过 `check_messages` 等工具交换消息（文字、截图、附件）。
+用于 **Cursor / VS Code** 的扩展（包名 **`cursor-mcp-bridge`**）：在侧栏管理多路 **Model Context Protocol（MCP）** 会话，让插件侧与 Cursor 对话通过 `check_messages` 等工具交换消息（文字、截图、附件）。
 
 ## 功能概要
 
@@ -25,8 +25,8 @@ npm run package   # 生成 .vsix（需已安装 vsce）
 
 | 变量 | 说明 |
 |------|------|
-| `SIDECAR_MCP_SESSION` | 会话编号字符串（如 `1`），多路时必填（旧名 `WUKONG_SESSION` 仍兼容） |
-| `SIDECAR_MCP_CHECK_MAX_WAIT_MS` | `check_messages` 空队列时最长等待毫秒数，默认 20000（旧名 `WUKONG_CHECK_MAX_WAIT_MS` 仍兼容） |
+| `CURSOR_MCP_BRIDGE_SESSION` | 会话编号字符串（如 `1`），多路时必填；旧名 `SIDECAR_MCP_SESSION`、`WUKONG_SESSION` 仍兼容 |
+| `CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS` | `check_messages` 空队列时最长等待毫秒数，默认 20000；旧名 `SIDECAR_MCP_CHECK_MAX_WAIT_MS`、`WUKONG_CHECK_MAX_WAIT_MS` 仍兼容 |
 
 ## 许可证
 

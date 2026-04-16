@@ -33,9 +33,9 @@ const viewType = "my.cursorMyUi";
 /** MCP 在 mcp.json 中最多注册数量（与 my-mcp-1 … my-mcp-N 一致） */
 const MAX_MCP_SESSIONS = 32;
 const DEFAULT_SESSION_ORDER = ["1", "2", "3"];
-const GLOBAL_STATE_SESSION_KEY = "sidecarMcp.sessionMessages.v1";
-const GLOBAL_STATE_SESSION_ORDER_KEY = "sidecarMcp.sessionOrder.v1";
-const GLOBAL_STATE_SESSION_MEMOS_KEY = "sidecarMcp.sessionMemos.v1";
+const GLOBAL_STATE_SESSION_KEY = "cursorMcpBridge.sessionMessages.v1";
+const GLOBAL_STATE_SESSION_ORDER_KEY = "cursorMcpBridge.sessionOrder.v1";
+const GLOBAL_STATE_SESSION_MEMOS_KEY = "cursorMcpBridge.sessionMemos.v1";
 const MAX_SESSION_MEMO_CHARS = 200;
 function isValidSessionId(id) {
     const n = parseInt(id, 10);
@@ -270,7 +270,7 @@ function activate(context) {
             mcpServers[`my-mcp-${id}`] = {
                 command: "node",
                 args: [mcpServerPathNorm],
-                env: { SIDECAR_MCP_SESSION: id },
+                env: { CURSOR_MCP_BRIDGE_SESSION: id },
             };
         }
         if (!fs.existsSync(cursorDir)) {
@@ -289,7 +289,7 @@ globs:
 alwaysApply: true
 ---
 
-# 侧栏 MCP 多会话规则
+# Cursor MCP Bridge 多会话规则
 
 侧栏可「添加/删除会话」管理通道（最多 **${MAX_MCP_SESSIONS}** 路）。点击 **「开始配置」** 时，仅按**当前侧栏会话列表**在本工作区 \`mcp.json\` 写入对应的 **my-mcp-N**；**增删会话后必须再次配置**，否则 Cursor 里 MCP 列表与插件不一致。每个 Cursor 对话窗口只绑定其中一个 **my-mcp-N**。
 
@@ -615,7 +615,7 @@ function getHtml(webview, nonce, extensionVersion) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="${csp}" />
-  <title>侧栏 MCP</title>
+  <title>Cursor MCP Bridge</title>
   <style>
     :root {
       --bg-primary: #1e1e2e;
@@ -1286,7 +1286,7 @@ function getHtml(webview, nonce, extensionVersion) {
   <div class="rail-resizer" id="railResizer" title="拖动调整会话栏宽度" role="separator" aria-orientation="vertical"></div>
   <div class="app-main">
   <div class="header">
-    <h2>侧栏 MCP</h2>
+    <h2>Cursor MCP Bridge</h2>
     <span class="header-version" id="extVersionBadge" title="扩展版本">v${extensionVersion}</span>
     <div class="status-dot" id="statusDot" title="连接状态"></div>
     <span id="activeMcpHint" class="hint" style="margin-left:auto;font-size:10px;">当前：MCP-1</span>
@@ -1388,7 +1388,7 @@ function getHtml(webview, nonce, extensionVersion) {
     <div class="help-overlay-backdrop" id="helpBackdrop" aria-hidden="true"></div>
     <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
       <div class="help-panel-header">
-        <h3 id="helpTitle">侧栏 MCP 使用说明</h3>
+        <h3 id="helpTitle">Cursor MCP Bridge 使用说明</h3>
         <button type="button" class="btn-close-help" id="closeHelpBtn">关闭</button>
       </div>
       <div class="help-panel-body">
@@ -1797,7 +1797,7 @@ function getHtml(webview, nonce, extensionVersion) {
       var RAIL_MIN = 56;
       var RAIL_MAX = 220;
       try {
-        var s = localStorage.getItem('sidecarMcp.sessionRailWidthPx');
+        var s = localStorage.getItem('cursorMcpBridge.sessionRailWidthPx');
         if (s) {
           var w = parseInt(s, 10);
           if (!isNaN(w) && w >= RAIL_MIN && w <= RAIL_MAX) {
@@ -1822,7 +1822,7 @@ function getHtml(webview, nonce, extensionVersion) {
           document.removeEventListener('mouseup', onUp);
           try {
             localStorage.setItem(
-              'sidecarMcp.sessionRailWidthPx',
+              'cursorMcpBridge.sessionRailWidthPx',
               String(Math.round(sessionRail.getBoundingClientRect().width))
             );
           } catch (err) { /* ignore */ }

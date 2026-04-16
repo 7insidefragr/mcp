@@ -27,10 +27,10 @@ exports.enforceCloudLicenseRevocationCheck =
     exports.DEFAULT_LICENSE_SECRET =
         void 0;
 exports.DEFAULT_LICENSE_SECRET = "";
-exports.GLOBAL_STATE_LICENSE_KEY = "sidecarMcp.license.v1";
-exports.GLOBAL_STATE_USED_NONCES_KEY = "sidecarMcp.usedLicenseNonces.v1";
-exports.GLOBAL_STATE_TRIAL_UNTIL_KEY = "sidecarMcp.trialUntil.v1";
-exports.GLOBAL_STATE_TRIAL_USED_KEY = "sidecarMcp.trialUsed.v1";
+exports.GLOBAL_STATE_LICENSE_KEY = "cursorMcpBridge.license.v1";
+exports.GLOBAL_STATE_USED_NONCES_KEY = "cursorMcpBridge.usedLicenseNonces.v1";
+exports.GLOBAL_STATE_TRIAL_UNTIL_KEY = "cursorMcpBridge.trialUntil.v1";
+exports.GLOBAL_STATE_TRIAL_USED_KEY = "cursorMcpBridge.trialUsed.v1";
 exports.TRIAL_DURATION_MS = 0;
 exports.MIN_LICENSE_DURATION_MS = 60 * 1000;
 exports.MAX_LICENSE_DURATION_MS = 10 * 365 * 24 * 3600 * 1000;

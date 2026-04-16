@@ -9,11 +9,12 @@ import { z } from "zod";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { join } from "path";
 
-// 多会话：SIDECAR_MCP_SESSION=1…32 时队列为 ~/.cursor/my-mcp-messages/s/<id>/
-// 兼容旧环境变量 WUKONG_SESSION；未设置时保持旧路径（兼容单实例 my-mcp）
+// 多会话：CURSOR_MCP_BRIDGE_SESSION=1…32 时队列为 ~/.cursor/my-mcp-messages/s/<id>/
+// 兼容旧名 SIDECAR_MCP_SESSION、WUKONG_SESSION；未设置时保持旧路径（兼容单实例 my-mcp）
 import { homedir } from "os";
 const queueRoot = join(homedir(), ".cursor", "my-mcp-messages");
 const sessionKey = (
+  process.env.CURSOR_MCP_BRIDGE_SESSION ||
   process.env.SIDECAR_MCP_SESSION ||
   process.env.WUKONG_SESSION ||
   ""
@@ -82,6 +83,7 @@ const MAX_CHECK_MAX_WAIT_MS = 120_000;
 
 function getCheckMaxWaitMs() {
   const raw = (
+    process.env.CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS ||
     process.env.SIDECAR_MCP_CHECK_MAX_WAIT_MS ||
     process.env.WUKONG_CHECK_MAX_WAIT_MS ||
     ""
@@ -121,7 +123,7 @@ server.registerTool(
       "【持续对话】获取用户通过插件发送的消息。助手正文应只在 Cursor 对话里输出。" +
       "若队列暂无消息，会在约 " +
       Math.round(getCheckMaxWaitMs() / 1000) +
-      " 秒内返回（可用环境变量 SIDECAR_MCP_CHECK_MAX_WAIT_MS 调节；旧名 WUKONG_CHECK_MAX_WAIT_MS 仍兼容），避免阻塞 Cursor。" +
+      " 秒内返回（可用环境变量 CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS 调节；旧名 SIDECAR_* / WUKONG_* 仍兼容），避免阻塞 Cursor。" +
       "需要等插件下一条时再调用；默认不传 reply（不向插件镜像助手回复）。",
     inputSchema: z.object({
       reply: z
