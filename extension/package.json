@@ -1,0 +1,70 @@
+{
+  "name": "wukong-mcp",
+  "displayName": "悟空mcp",
+  "description": "侧栏多路 MCP：多项目与多工作区并行、多窗口各绑独立通道；支持截图/文件随消息、会话备忘。",
+  "version": "1.4.0",
+  "publisher": "sunxingzhe996",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "cursor",
+    "model context protocol",
+    "multi-session",
+    "sidebar",
+    "wukong",
+    "悟空",
+    "chat",
+    "check_messages"
+  ],
+  "categories": [
+    "Other"
+  ],
+  "engines": {
+    "vscode": "^1.71.0"
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onView:my.cursorMyUi",
+    "onCommand:my.cursorMyUi.configureWorkspace"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "my.cursorMyUi.configureWorkspace",
+        "title": "配置工作区（MCP）",
+        "category": "悟空mcp"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "wukong-mcp",
+          "title": "悟空mcp",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "wukong-mcp": [
+        {
+          "type": "webview",
+          "id": "my.cursorMyUi",
+          "name": "悟空mcp"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -p . -w",
+    "package": "vsce package --no-dependencies",
+    "postinstall": "cd mcp-server && npm install"
+  },
+  "devDependencies": {
+    "@types/node": "^16.18.0",
+    "@types/vscode": "^1.71.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^4.7.4",
+    "@vscode/vsce": "^3.7.0"
+  }
+}

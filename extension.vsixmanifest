@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+		<Metadata>
+			<Identity Language="en-US" Id="wukong-mcp" Version="1.4.0" Publisher="sunxingzhe996" />
+			<DisplayName>悟空mcp</DisplayName>
+			<Description xml:space="preserve">侧栏多路 MCP：多项目与多工作区并行、多窗口各绑独立通道，连接稳定；支持截图/文件随消息、会话备忘；可先试用 30 分钟再购买。</Description>
+			<Tags>mcp,cursor,model context protocol,multi-session,sidebar,wukong,悟空,chat,check_messages</Tags>
+			<Categories>Other</Categories>
+			<GalleryFlags>Public</GalleryFlags>
+			
+			<Properties>
+				<Property Id="Microsoft.VisualStudio.Code.Engine" Value="^1.71.0" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionDependencies" Value="" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionPack" Value="" />
+				<Property Id="Microsoft.VisualStudio.Code.ExtensionKind" Value="workspace" />
+				<Property Id="Microsoft.VisualStudio.Code.LocalizedLanguages" Value="" />
+				<Property Id="Microsoft.VisualStudio.Code.EnabledApiProposals" Value="" />
+				
+				<Property Id="Microsoft.VisualStudio.Code.ExecutesCode" Value="true" />
+				
+				
+				
+				
+				
+				
+				<Property Id="Microsoft.VisualStudio.Services.GitHubFlavoredMarkdown" Value="true" />
+				<Property Id="Microsoft.VisualStudio.Services.Content.Pricing" Value="Free"/>
+
+				
+				
+			</Properties>
+			<License>extension/LICENSE.txt</License>
+			
+		</Metadata>
+		<Installation>
+			<InstallationTarget Id="Microsoft.VisualStudio.Code"/>
+		</Installation>
+		<Dependencies/>
+		<Assets>
+			<Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />
+			<Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/readme.md" Addressable="true" />
+<Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.txt" Addressable="true" />
+		</Assets>
+	</PackageManifest>
