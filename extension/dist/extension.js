@@ -31,15 +31,15 @@ const os = __importStar(require("os"));
 const child_process_1 = require("child_process");
 const viewType = "my.cursorMyUi";
 /** MCP 在 mcp.json 中最多注册数量（与 my-mcp-1 … my-mcp-N 一致） */
-const MAX_WUKONG_SESSIONS = 32;
+const MAX_MCP_SESSIONS = 32;
 const DEFAULT_SESSION_ORDER = ["1", "2", "3"];
-const GLOBAL_STATE_SESSION_KEY = "wukong.sessionMessages.v1";
-const GLOBAL_STATE_SESSION_ORDER_KEY = "wukong.sessionOrder.v1";
-const GLOBAL_STATE_SESSION_MEMOS_KEY = "wukong.sessionMemos.v1";
+const GLOBAL_STATE_SESSION_KEY = "sidecarMcp.sessionMessages.v1";
+const GLOBAL_STATE_SESSION_ORDER_KEY = "sidecarMcp.sessionOrder.v1";
+const GLOBAL_STATE_SESSION_MEMOS_KEY = "sidecarMcp.sessionMemos.v1";
 const MAX_SESSION_MEMO_CHARS = 200;
 function isValidSessionId(id) {
     const n = parseInt(id, 10);
-    return Number.isInteger(n) && n >= 1 && n <= MAX_WUKONG_SESSIONS && String(n) === id;
+    return Number.isInteger(n) && n >= 1 && n <= MAX_MCP_SESSIONS && String(n) === id;
 }
 /** 去重、校验、按编号排序 */
 function normalizeSessionOrder(raw) {
@@ -270,7 +270,7 @@ function activate(context) {
             mcpServers[`my-mcp-${id}`] = {
                 command: "node",
                 args: [mcpServerPathNorm],
-                env: { WUKONG_SESSION: id },
+                env: { SIDECAR_MCP_SESSION: id },
             };
         }
         if (!fs.existsSync(cursorDir)) {
@@ -289,9 +289,9 @@ globs:
 alwaysApply: true
 ---
 
-# 悟空mcp 多会话规则
+# 侧栏 MCP 多会话规则
 
-侧栏可「添加/删除会话」管理通道（最多 **${MAX_WUKONG_SESSIONS}** 路）。点击 **「开始配置」** 时，仅按**当前侧栏会话列表**在本工作区 \`mcp.json\` 写入对应的 **my-mcp-N**；**增删会话后必须再次配置**，否则 Cursor 里 MCP 列表与插件不一致。每个 Cursor 对话窗口只绑定其中一个 **my-mcp-N**。
+侧栏可「添加/删除会话」管理通道（最多 **${MAX_MCP_SESSIONS}** 路）。点击 **「开始配置」** 时，仅按**当前侧栏会话列表**在本工作区 \`mcp.json\` 写入对应的 **my-mcp-N**；**增删会话后必须再次配置**，否则 Cursor 里 MCP 列表与插件不一致。每个 Cursor 对话窗口只绑定其中一个 **my-mcp-N**。
 
 ## 核心规则
 
@@ -327,12 +327,12 @@ check_messages → 收到插件消息 → 【Cursor 完整回复】→ check_mes
             webviewView.webview.html = getHtml(webviewView.webview, nonce, extVer);
             const queueDirFixed = path.join(os.homedir(), ".cursor", "my-mcp-messages");
             const lastReplyBySession = {};
-            for (let n = 1; n <= MAX_WUKONG_SESSIONS; n++) {
+            for (let n = 1; n <= MAX_MCP_SESSIONS; n++) {
                 lastReplyBySession[String(n)] = "";
             }
             const pollIntervalMs = 800;
             const intervalId = setInterval(() => {
-                for (let n = 1; n <= MAX_WUKONG_SESSIONS; n++) {
+                for (let n = 1; n <= MAX_MCP_SESSIONS; n++) {
                     const sid = String(n);
                     try {
                         const replyPath = path.join(queueDirFixed, "s", sid, "reply.json");
@@ -615,7 +615,7 @@ function getHtml(webview, nonce, extensionVersion) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="${csp}" />
-  <title>悟空mcp</title>
+  <title>侧栏 MCP</title>
   <style>
     :root {
       --bg-primary: #1e1e2e;
@@ -1286,7 +1286,7 @@ function getHtml(webview, nonce, extensionVersion) {
   <div class="rail-resizer" id="railResizer" title="拖动调整会话栏宽度" role="separator" aria-orientation="vertical"></div>
   <div class="app-main">
   <div class="header">
-    <h2>悟空mcp</h2>
+    <h2>侧栏 MCP</h2>
     <span class="header-version" id="extVersionBadge" title="扩展版本">v${extensionVersion}</span>
     <div class="status-dot" id="statusDot" title="连接状态"></div>
     <span id="activeMcpHint" class="hint" style="margin-left:auto;font-size:10px;">当前：MCP-1</span>
@@ -1388,7 +1388,7 @@ function getHtml(webview, nonce, extensionVersion) {
     <div class="help-overlay-backdrop" id="helpBackdrop" aria-hidden="true"></div>
     <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
       <div class="help-panel-header">
-        <h3 id="helpTitle">悟空mcp 使用说明</h3>
+        <h3 id="helpTitle">侧栏 MCP 使用说明</h3>
         <button type="button" class="btn-close-help" id="closeHelpBtn">关闭</button>
       </div>
       <div class="help-panel-body">
@@ -1467,7 +1467,7 @@ function getHtml(webview, nonce, extensionVersion) {
     const sessionMemoBadge = document.getElementById('sessionMemoBadge');
     const sessionMemoInput = document.getElementById('sessionMemoInput');
 
-    var MAX_SESSIONS = ${MAX_WUKONG_SESSIONS};
+    var MAX_SESSIONS = ${MAX_MCP_SESSIONS};
     /** @type string[] */
     var sessionOrder = ['1', '2', '3'];
     var activeSessionId = '1';
@@ -1797,7 +1797,7 @@ function getHtml(webview, nonce, extensionVersion) {
       var RAIL_MIN = 56;
       var RAIL_MAX = 220;
       try {
-        var s = localStorage.getItem('wukong.sessionRailWidthPx');
+        var s = localStorage.getItem('sidecarMcp.sessionRailWidthPx');
         if (s) {
           var w = parseInt(s, 10);
           if (!isNaN(w) && w >= RAIL_MIN && w <= RAIL_MAX) {
@@ -1822,7 +1822,7 @@ function getHtml(webview, nonce, extensionVersion) {
           document.removeEventListener('mouseup', onUp);
           try {
             localStorage.setItem(
-              'wukong.sessionRailWidthPx',
+              'sidecarMcp.sessionRailWidthPx',
               String(Math.round(sessionRail.getBoundingClientRect().width))
             );
           } catch (err) { /* ignore */ }

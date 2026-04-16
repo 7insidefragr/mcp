@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>悟空mcp · 本地 WK M1 卡密生成</title>
+  <title>侧栏 MCP · 本地 WK M1 卡密生成</title>
   <style>
     :root {
       --bg: #11111b;
@@ -124,11 +124,11 @@
   <h1>本地 WK M1 卡密生成器</h1>
   <p class="sub">与扩展内 <code>license.ts</code> 算法一致（HMAC‑SHA256）。在资源管理器中双击本文件即可在浏览器打开；<strong>不上传任何数据</strong>，仅在本地计算。</p>
   <div class="info-box">
-    <strong>扩展侧</strong>：默认已支持 <code>WKM1.</code> 本地卡密（<code>wukong.cloudLicenseOnly</code> 默认为 false）。请将下方「签名密钥」填成与 Cursor 设置里 <code>wukong.licenseSecret</code> 完全一致（≥8 字符），否则激活会提示签名错误。
+    <strong>扩展侧</strong>：若你使用的发行版支持 <code>WKM1.</code> 本地卡密，请将下方「签名密钥」填成与编辑器设置中的 <code>licenseSecret</code>（或发行版文档指定的配置项）完全一致（≥8 字符），否则激活会提示签名错误。
   </div>
 
   <div class="card">
-    <label for="secret">签名密钥 wukong.licenseSecret</label>
+    <label for="secret">签名密钥（与扩展设置一致）</label>
     <input type="text" id="secret" spellcheck="false" autocomplete="off"
       placeholder="留空则使用内置默认密钥" />
 
@@ -177,7 +177,7 @@
 
     <p class="hint">
       · 卡密格式：<code>WKM1.&lt;payload&gt;.&lt;signature&gt;</code><br />
-      · 仅云端卡密：在设置中将 <code>wukong.cloudLicenseOnly</code> 设为 <code>true</code>，此时本地 WK M1 将被拒绝。<br />
+      · 仅云端卡密：若扩展提供对应开关，在设置中开启「仅云端」类选项时，本地 WK M1 可能被拒绝。<br />
       · 内置默认密钥与源码中 <code>DEFAULT_LICENSE_SECRET</code> 一致（正式环境请改密钥）。<br />
       · 「自定义」使用 <code>timed</code> 类型，载荷含 <code>durationMs</code>，签名绑定该值。
     </p>
@@ -186,7 +186,7 @@
 
   <script>
     (function () {
-      var DEFAULT_SECRET = "wukong-mcp-dev-please-change-in-settings-2025";
+      var DEFAULT_SECRET = "sidecar-mcp-dev-change-in-settings-2026";
       var MIN_MS = 60 * 1000;
       var MAX_MS = 10 * 365 * 24 * 3600 * 1000;
 

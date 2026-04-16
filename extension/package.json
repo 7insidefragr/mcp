@@ -1,6 +1,6 @@
 {
-  "name": "wukong-mcp",
-  "displayName": "悟空mcp",
+  "name": "sidecar-mcp",
+  "displayName": "侧栏 MCP",
   "description": "侧栏多路 MCP：多项目与多工作区并行、多窗口各绑独立通道；支持截图/文件随消息、会话备忘。",
   "version": "1.4.0",
   "publisher": "sunxingzhe996",
@@ -11,8 +11,7 @@
     "model context protocol",
     "multi-session",
     "sidebar",
-    "wukong",
-    "悟空",
+    "sidecar",
     "chat",
     "check_messages"
   ],
@@ -32,24 +31,24 @@
       {
         "command": "my.cursorMyUi.configureWorkspace",
         "title": "配置工作区（MCP）",
-        "category": "悟空mcp"
+        "category": "侧栏 MCP"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "wukong-mcp",
-          "title": "悟空mcp",
+          "id": "sidecar-mcp",
+          "title": "侧栏 MCP",
           "icon": "resources/icon.svg"
         }
       ]
     },
     "views": {
-      "wukong-mcp": [
+      "sidecar-mcp": [
         {
           "type": "webview",
           "id": "my.cursorMyUi",
-          "name": "悟空mcp"
+          "name": "侧栏 MCP"
         }
       ]
     }

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 	<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
 		<Metadata>
-			<Identity Language="en-US" Id="wukong-mcp" Version="1.4.0" Publisher="sunxingzhe996" />
-			<DisplayName>悟空mcp</DisplayName>
-			<Description xml:space="preserve">侧栏多路 MCP：多项目与多工作区并行、多窗口各绑独立通道，连接稳定；支持截图/文件随消息、会话备忘；可先试用 30 分钟再购买。</Description>
-			<Tags>mcp,cursor,model context protocol,multi-session,sidebar,wukong,悟空,chat,check_messages</Tags>
+			<Identity Language="en-US" Id="sidecar-mcp" Version="1.4.0" Publisher="sunxingzhe996" />
+			<DisplayName>侧栏 MCP</DisplayName>
+			<Description xml:space="preserve">侧栏多路 MCP：多项目与多工作区并行、多窗口各绑独立通道；支持截图/文件随消息、会话备忘。</Description>
+			<Tags>mcp,cursor,model context protocol,multi-session,sidebar,sidecar,chat,check_messages</Tags>
 			<Categories>Other</Categories>
 			<GalleryFlags>Public</GalleryFlags>
 			

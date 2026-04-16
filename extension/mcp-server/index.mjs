@@ -9,11 +9,15 @@ import { z } from "zod";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { join } from "path";
 
-// 多会话：WUKONG_SESSION=1…32 时队列为 ~/.cursor/my-mcp-messages/s/<id>/
-// 未设置环境变量时保持旧路径（兼容单实例 my-mcp）
+// 多会话：SIDECAR_MCP_SESSION=1…32 时队列为 ~/.cursor/my-mcp-messages/s/<id>/
+// 兼容旧环境变量 WUKONG_SESSION；未设置时保持旧路径（兼容单实例 my-mcp）
 import { homedir } from "os";
 const queueRoot = join(homedir(), ".cursor", "my-mcp-messages");
-const sessionKey = (process.env.WUKONG_SESSION || "").trim();
+const sessionKey = (
+  process.env.SIDECAR_MCP_SESSION ||
+  process.env.WUKONG_SESSION ||
+  ""
+).trim();
 const queueDir = sessionKey ? join(queueRoot, "s", sessionKey) : queueRoot;
 const queuePath = join(queueDir, "messages.json");
 
@@ -61,13 +65,32 @@ function buildSystemSuffix() {
     "【必须先做】像平常聊天一样直接回应用户内容（寒暄、问答、任务等），不要用「工具已验证」「MCP 正常」等**代替真实回复**。\n" +
     "【禁止】用长篇解释插件/Cursor/通道原理来结束本轮；用户发「你好」就正常回「你好」类简短问候即可。\n\n" +
     "正文写在 Cursor 窗口；默认不要把长文塞进 reply。\n\n" +
-    "回复用户后**必须立刻**再调用 check_messages()（reply 可省略）等待下一条，否则用户会感觉「对话中断」。\n" +
+    "与插件持续对话时：处理完本条后应再次调用 check_messages（reply 可省略）以取下一条；队列空时工具会在约 " +
+    Math.round(getCheckMaxWaitMs() / 1000) +
+    " 秒内返回，不会永久卡住 Cursor。\n" +
     "[END]";
 
   return suffix;
 }
 
 const POLL_INTERVAL_MS = 1000;
+
+// 避免单次工具调用永不返回导致 Cursor/Agent 卡在「等 MCP」；可用环境变量调节
+const DEFAULT_CHECK_MAX_WAIT_MS = 20_000;
+const MIN_CHECK_MAX_WAIT_MS = 3_000;
+const MAX_CHECK_MAX_WAIT_MS = 120_000;
+
+function getCheckMaxWaitMs() {
+  const raw = (
+    process.env.SIDECAR_MCP_CHECK_MAX_WAIT_MS ||
+    process.env.WUKONG_CHECK_MAX_WAIT_MS ||
+    ""
+  ).trim();
+  if (!raw) return DEFAULT_CHECK_MAX_WAIT_MS;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return DEFAULT_CHECK_MAX_WAIT_MS;
+  return Math.min(MAX_CHECK_MAX_WAIT_MS, Math.max(MIN_CHECK_MAX_WAIT_MS, Math.round(n)));
+}
 
 function sleepWithAbort(signal, ms) {
   return new Promise((resolve) => {
@@ -96,7 +119,10 @@ server.registerTool(
     title: "检查消息（持续对话）",
     description:
       "【持续对话】获取用户通过插件发送的消息。助手正文应只在 Cursor 对话里输出。" +
-      "处理完后必须再次调用本工具以保持循环；默认不传 reply（不向插件镜像助手回复）。",
+      "若队列暂无消息，会在约 " +
+      Math.round(getCheckMaxWaitMs() / 1000) +
+      " 秒内返回（可用环境变量 SIDECAR_MCP_CHECK_MAX_WAIT_MS 调节；旧名 WUKONG_CHECK_MAX_WAIT_MS 仍兼容），避免阻塞 Cursor。" +
+      "需要等插件下一条时再调用；默认不传 reply（不向插件镜像助手回复）。",
     inputSchema: z.object({
       reply: z
         .string()
@@ -119,7 +145,9 @@ server.registerTool(
       }
     }
 
-    // long-poll：一直等待，直到队列里出现新消息；这样 Cursor 才能“持续对话”
+    const deadline = Date.now() + getCheckMaxWaitMs();
+
+    // 带超时的轮询：有消息立刻返回；无消息最多等到 deadline，避免 Agent 永久卡在工具调用上
     while (!extra.signal.aborted) {
       const data = readQueue();
       const queued = Array.isArray(data.messages) ? data.messages : [];
@@ -206,7 +234,21 @@ server.registerTool(
         return { content };
       }
 
-      await sleepWithAbort(extra.signal, POLL_INTERVAL_MS);
+      if (Date.now() >= deadline) {
+        return {
+          content: [
+            {
+              type: "text",
+              text:
+                "[system] 暂无来自插件的新消息（本轮等待已达上限）。若仍需监听插件，请稍后再调用 check_messages；否则继续处理 Cursor 里的任务即可。",
+            },
+          ],
+        };
+      }
+
+      const remaining = deadline - Date.now();
+      const sleepMs = Math.min(POLL_INTERVAL_MS, Math.max(1, remaining));
+      await sleepWithAbort(extra.signal, sleepMs);
     }
 
     return {
