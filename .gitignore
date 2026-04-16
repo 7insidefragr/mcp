@@ -1,3 +1,6 @@
 # Local VSIX build artifacts
 *.vsix
 extension/*.vsix
+
+# Per-machine MCP config (extension writes absolute paths)
+.cursor/mcp.json
