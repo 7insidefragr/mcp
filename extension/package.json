@@ -2,7 +2,7 @@
   "name": "cursor-mcp-bridge",
   "displayName": "Cursor MCP Bridge",
   "description": "侧栏多路 MCP：多项目与多工作区并行、多窗口各绑独立通道；支持截图/文件随消息、会话备忘。",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "publisher": "sunxingzhe996",
   "icon": "resources/icon-128.png",
   "license": "MIT",
@@ -40,7 +40,7 @@
         {
           "id": "cursor-mcp-bridge",
           "title": "MCP Bridge",
-          "icon": "resources/icon.svg"
+          "icon": "resources/icon-activity.svg"
         }
       ]
     },

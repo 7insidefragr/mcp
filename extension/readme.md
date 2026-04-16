@@ -12,6 +12,17 @@
 
 ## 使用说明（必读）
 
+完整流程见下文 **§1～§5**；更短的摘要见文末 **「快速开始」**。
+
+### 关于活动栏图标（左侧竖条）
+
+Cursor / VS Code 会对**活动栏**图标做**主题色蒙版**，只保留形状轮廓，因此**不适合**直接放彩色缩略图（容易变成一坨灰色圆点）。本扩展：
+
+- **活动栏**：使用 `resources/icon-activity.svg`（纯 `currentColor` 描边，双节点 + 桥接线，随主题亮/暗变化）。
+- **扩展市场 / 已安装列表里的「头像」**：使用 `package.json` 的 `icon` 字段，即 **`resources/icon-128.png`**（彩色小图）。
+
+若你想自定义活动栏外观，可替换 `icon-activity.svg`（保持单色描边为宜），并把 `package.json` → `contributes.viewsContainers.activitybar[0].icon` 指到你的文件。
+
 ### 1. 安装扩展
 
 - 在 Cursor / VS Code 中：**扩展 → 从 VSIX 安装**，选择打包好的 `cursor-mcp-bridge-x.x.x.vsix`；或在本仓库 `extension` 目录执行 `npm run package` 生成 VSIX 后安装。
@@ -19,7 +30,7 @@
 
 ### 2. 打开侧栏并配置工作区
 
-1. 点击活动栏 **MCP Bridge**（活动栏图标为 `resources/icon.svg`；扩展市场/已安装列表中的「头像」为 `package.json` 的 `icon`：`resources/icon-128.png`）。
+1. 点击活动栏 **MCP Bridge**（活动栏为 `resources/icon-activity.svg`；扩展列表彩色头像是 `resources/icon-128.png`，见上文说明）。
 2. 在侧栏顶部选择要绑定的**工作区文件夹**（需已用 Cursor 打开该文件夹）。
 3. 按需 **添加会话 / 删除会话**（每路对应 Cursor 里的一个 MCP 名称，如 `my-mcp-1`）。
 4. 点击 **开始配置**：会向该工作区写入 `.cursor/mcp.json`（多路 `my-mcp-N`）以及 `.cursor/rules/` 下的规则文件，引导模型使用 `check_messages`。
