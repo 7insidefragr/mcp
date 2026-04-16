@@ -66,9 +66,11 @@ function buildSystemSuffix() {
     "【必须先做】像平常聊天一样直接回应用户内容（寒暄、问答、任务等），不要用「工具已验证」「MCP 正常」等**代替真实回复**。\n" +
     "【禁止】用长篇解释插件/Cursor/通道原理来结束本轮；用户发「你好」就正常回「你好」类简短问候即可。\n\n" +
     "正文写在 Cursor 窗口；默认不要把长文塞进 reply。\n\n" +
-    "与插件持续对话时：处理完本条后应再次调用 check_messages（reply 可省略）以取下一条；队列空时工具会在约 " +
+    "与插件持续对话时：处理完本条后可再调 check_messages（reply 可省略）看是否还有下一条。" +
+    "若本次返回**仅一行**标记 `[cursor-mcp-bridge:queue-empty]`，表示队列为空：**禁止**把该标记或「暂无消息」类说明复述给用户，**禁止**在同一轮里连环调用 check_messages；" +
+    "请继续正常处理 Cursor 里用户的对话；待插件侧可能又有新消息、或用户明确要求拉取时再调。单次空队列等待最长约 " +
     Math.round(getCheckMaxWaitMs() / 1000) +
-    " 秒内返回，不会永久卡住 Cursor。\n" +
+    " 秒。\n" +
     "[END]";
 
   return suffix;
@@ -113,7 +115,7 @@ function sleepWithAbort(signal, ms) {
 }
 
 const serverName = sessionKey ? `my-mcp-${sessionKey}` : "my-mcp";
-const server = new McpServer({ name: serverName, version: "1.5.3" });
+const server = new McpServer({ name: serverName, version: "1.5.4" });
 
 // Cursor 调用此工具获取你在扩展里发送的消息
 server.registerTool(
@@ -124,8 +126,9 @@ server.registerTool(
       "【持续对话】获取用户通过插件发送的消息。助手正文应只在 Cursor 对话里输出。" +
       "若队列暂无消息，会在约 " +
       Math.round(getCheckMaxWaitMs() / 1000) +
-      " 秒内返回（可用环境变量 CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS 调节；旧名 SIDECAR_* / WUKONG_* 仍兼容），避免阻塞 Cursor。" +
-      "需要等插件下一条时再调用；默认不传 reply（不向插件镜像助手回复）。",
+      " 秒内返回一行标记 `[cursor-mcp-bridge:queue-empty]`（可用环境变量 CURSOR_MCP_BRIDGE_CHECK_MAX_WAIT_MS 调节；旧名 SIDECAR_* / WUKONG_* 仍兼容）。" +
+      "出现该标记时：不要复述给用户，不要同一回合内连续多次调用本工具。" +
+      "默认不传 reply（不向插件镜像助手回复）。",
     inputSchema: z.object({
       reply: z
         .string()
@@ -238,14 +241,9 @@ server.registerTool(
       }
 
       if (Date.now() >= deadline) {
+        // 极简标记：避免模型把长段「暂无消息」复述给用户；含义见工具 description 与工作区规则
         return {
-          content: [
-            {
-              type: "text",
-              text:
-                "[system] 暂无来自插件的新消息（本轮等待已达上限）。若仍需监听插件，请稍后再调用 check_messages；否则继续处理 Cursor 里的任务即可。",
-            },
-          ],
+          content: [{ type: "text", text: "[cursor-mcp-bridge:queue-empty]" }],
         };
       }
 

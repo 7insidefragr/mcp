@@ -284,7 +284,7 @@ function activate(context) {
         }
         const rulePath = path.join(rulesDir, "my-mcp.mdc");
         const ruleContent = `---
-description: 助手正文只在 Cursor 显示；用 check_messages 保持循环，不向插件镜像长回复
+description: 助手正文只在 Cursor 显示；按需 check_messages，不向插件镜像长回复；勿复读 queue-empty
 globs:
 alwaysApply: true
 ---
@@ -297,19 +297,20 @@ alwaysApply: true
 
 1. **先正常对话**：用户寒暄、提问、下任务时，要像普通聊天一样直接回应；**禁止**用「工具正常」「通道已验证」等套话代替回答（例如用户说「你好」就要正常回问候）。
 2. **用户要看的内容**：写在 **Cursor 对话窗口**；**默认不传 \`reply\`**。
-3. **循环**：每轮回应后**必须立刻**再调用当前 MCP 的 \`check_messages()\`，否则用户会感觉对话被中断。
-4. 插件可能**每次只推一条消息**；连发多条会分多次送达，请逐次回复并继续 \`check_messages\`。
+3. **拉取插件消息**：刚处理完**一条**来自插件的消息后，可**再调用一次**当前 MCP 的 \`check_messages()\`，看队列里是否还有下一条。
+4. **空队列标记**：若 \`check_messages\` 返回值**仅为**一行 \`[cursor-mcp-bridge:queue-empty]\`，表示插件侧当前没有排队消息。**禁止**把该标记或「暂无消息」「等待已达上限」等复述给用户；**禁止**在同一助手回合内连续多次调用 \`check_messages\` 刷屏。此时应把注意力转回用户在 Cursor 里的正常对话；待用户可能又从插件发了消息、或用户明确要求你再拉插件时，再调用 \`check_messages\`。
 
 ## 禁止
 
 - ❌ 长篇解释 MCP/插件原理来代替对用户消息的回复
-- ❌ 不调用 \`check_messages\` 就结束（等于中断用户）
-- ❌ 等待用户在 Cursor 里打字（用户从插件发消息）
+- ❌ 在出现 \`[cursor-mcp-bridge:queue-empty]\` 后仍连环调用 \`check_messages\` 并把说明甩给用户
+- ❌ 假装「插件侧暂时没有新消息了」等话术当作用户可见结论（除非用户真的在问队列状态）
 
 ## 流程
 
 \`\`\`
-check_messages → 收到插件消息 → 【Cursor 完整回复】→ check_messages() → 等待…
+check_messages → 若有插件消息 → 在 Cursor 回复用户 → （可选）再 check_messages 一次看是否还有下一条
+              → 若仅 [cursor-mcp-bridge:queue-empty] → 停止轮询，正常聊 Cursor 里的内容
 \`\`\`
 `;
         fs.writeFileSync(rulePath, ruleContent, "utf-8");
